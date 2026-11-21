@@ -1,0 +1,611 @@
+<!-- index.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Studywise — Study Planner & AI Coach</title>
+  <style>
+    :root {
+      --green: #286547;
+      --green-dark: #1e5037;
+      --soft-green: #edf5ef;
+      --bg: #f5f7f3;
+      --ink: #25352b;
+      --muted: #748078;
+      --line: #e2e8e1;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--ink);
+      font-family: Arial, sans-serif;
+    }
+
+    header {
+      padding: 25px 20px;
+      background: var(--green);
+      color: white;
+      text-align: center;
+    }
+
+    header h1 { margin: 0 0 6px; }
+    header p { margin: 0; color: #dcebe1; }
+
+    main {
+      width: min(1050px, 94%);
+      margin: 28px auto;
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: 1.2fr 0.8fr;
+      gap: 20px;
+      align-items: start;
+    }
+
+    .card {
+      margin-bottom: 20px;
+      padding: 21px;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: white;
+      box-shadow: 0 5px 20px #24372b0b;
+    }
+
+    h2 { margin: 0 0 8px; font-size: 19px; }
+    .hint { margin: 0 0 18px; color: var(--muted); font-size: 14px; }
+
+    form, .stack { display: grid; gap: 14px; }
+
+    .row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    label {
+      display: grid;
+      gap: 6px;
+      color: #4c5d52;
+      font-size: 13px;
+      font-weight: bold;
+    }
+
+    input, select, textarea {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid #dce5dc;
+      border-radius: 8px;
+      background: white;
+      color: var(--ink);
+      font: inherit;
+    }
+
+    input, select { min-height: 41px; }
+
+    textarea {
+      min-height: 75px;
+      resize: vertical;
+    }
+
+    input:focus, select:focus, textarea:focus {
+      border-color: #71a184;
+      outline: 3px solid #e8f2eb;
+    }
+
+    button {
+      min-height: 42px;
+      padding: 10px 14px;
+      border: 0;
+      border-radius: 8px;
+      background: var(--green);
+      color: white;
+      font: inherit;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    button:hover { background: var(--green-dark); }
+    button:disabled { cursor: wait; opacity: 0.65; }
+
+    .secondary {
+      border: 1px solid var(--line);
+      background: white;
+      color: var(--green);
+    }
+
+    .secondary:hover { background: var(--soft-green); }
+
+    .helper {
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.5;
+    }
+
+    .actions {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    .summary {
+      padding: 13px;
+      border-radius: 9px;
+      background: var(--soft-green);
+      line-height: 1.6;
+    }
+
+    .session {
+      display: grid;
+      grid-template-columns: 75px 1fr auto;
+      gap: 11px;
+      align-items: center;
+      padding: 13px 0;
+      border-bottom: 1px solid #edf0ec;
+    }
+
+    .session:last-child { border-bottom: 0; }
+    .session-time { color: var(--muted); font-size: 13px; }
+    .session-title { display: block; font-size: 14px; }
+    .session-detail { display: block; margin-top: 4px; color: var(--muted); font-size: 12px; }
+
+    .session input {
+      width: 18px;
+      min-height: auto;
+      accent-color: var(--green);
+    }
+
+    .chat-messages {
+      display: grid;
+      max-height: 300px;
+      gap: 10px;
+      overflow-y: auto;
+      margin-bottom: 12px;
+    }
+
+    .message {
+      max-width: 90%;
+      padding: 11px 13px;
+      border-radius: 10px;
+      background: #f1f4f0;
+      font-size: 14px;
+      line-height: 1.5;
+      white-space: pre-wrap;
+      overflow-wrap: anywhere;
+    }
+
+    .message.user {
+      justify-self: end;
+      background: var(--soft-green);
+    }
+
+    .chat-form {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 8px;
+    }
+
+    .chat-form textarea { min-height: 43px; }
+
+    #status {
+      min-height: 20px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .tips li {
+      margin: 11px 0;
+      color: #4c5d52;
+      line-height: 1.5;
+    }
+
+    @media (max-width: 720px) {
+      .layout { grid-template-columns: 1fr; }
+      .row { grid-template-columns: 1fr; }
+      .card { padding: 16px; }
+    }
+
+    @media (max-width: 420px) {
+      .actions { grid-template-columns: 1fr; }
+      .session { grid-template-columns: 57px 1fr auto; gap: 8px; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Studywise</h1>
+    <p>Plan your study routine and get help from your AI study coach.</p>
+  </header>
+
+  <main>
+    <div class="layout">
+      <section>
+        <div class="card">
+          <h2>Build your study plan</h2>
+          <p class="hint">Add your exam details and daily study availability.</p>
+
+          <form id="plan-form">
+            <label>
+              Exam or subject
+              <input id="exam-name" maxlength="80" placeholder="e.g. Mathematics final">
+            </label>
+
+            <div class="row">
+              <label>
+                Exam date
+                <input id="exam-date" type="date" required>
+              </label>
+              <label>
+                Exam time
+                <input id="exam-time" type="time" required>
+              </label>
+            </div>
+
+            <label>
+              Upload notes or syllabus
+              <input id="notes" type="file" multiple
+                accept=".pdf,.doc,.docx,.txt,.md,.ppt,.pptx">
+              <span class="helper">
+                The AI receives filenames only; file contents aren't uploaded.
+              </span>
+            </label>
+
+            <div class="row">
+              <label>
+                Study hours per day
+                <select id="hours">
+                  <option value="1">1 hour</option>
+                  <option value="2">2 hours</option>
+                  <option value="3" selected>3 hours</option>
+                  <option value="4">4 hours</option>
+                  <option value="5">5 hours</option>
+                  <option value="6">6 hours</option>
+                </select>
+              </label>
+              <label>
+                Start studying at
+                <input id="start-time" type="time" value="14:00" required>
+              </label>
+            </div>
+
+            <div class="actions">
+              <button type="submit">Create a routine</button>
+              <button type="button" class="secondary" id="ai-plan">
+                Create routine with AI
+              </button>
+            </div>
+            <div id="status" role="status" aria-live="polite"></div>
+          </form>
+        </div>
+
+        <div class="card">
+          <h2>Today's schedule</h2>
+          <p class="hint" id="schedule-summary">Create a plan to see your study sessions.</p>
+          <div id="schedule"></div>
+        </div>
+
+        <div class="card">
+          <h2>Placement preparation</h2>
+          <ul class="tips">
+            <li>Practice data structures and algorithms regularly.</li>
+            <li>Review DBMS, operating systems, and networking basics.</li>
+            <li>Build projects and prepare to explain how they work.</li>
+            <li>Practice interviews and a short self-introduction.</li>
+          </ul>
+        </div>
+      </section>
+
+      <aside>
+        <div class="card">
+          <h2>Exam overview</h2>
+          <div class="summary" id="exam-summary">No exam added yet.</div>
+          <p><strong>Completed sessions:</strong> <span id="completed-count">0</span></p>
+        </div>
+
+        <div class="card">
+          <h2>AI study coach</h2>
+          <p class="hint">Ask a question or get help understanding a topic.</p>
+
+          <div class="chat-messages" id="messages" aria-live="polite">
+            <div class="message">
+              Hi! Tell me what you're studying, and I'll help you make a plan or understand a concept.
+            </div>
+          </div>
+
+          <form class="chat-form" id="chat-form">
+            <label for="chat-input" class="helper" style="position:absolute;left:-9999px">
+              Message the AI study coach
+            </label>
+            <textarea id="chat-input" maxlength="1000"
+              placeholder="What would you like help with?" required></textarea>
+            <button id="send-button" type="submit">Send</button>
+          </form>
+          <p class="helper">AI responses may be incorrect. Check important information with your course materials.</p>
+        </div>
+      </aside>
+    </div>
+  </main>
+
+  <script>
+    const STORAGE_KEY = "studywise-plan";
+    const chatHistory = [];
+    let plan = null;
+    let completed = [];
+
+    const $ = (selector) => document.querySelector(selector);
+    const today = new Date();
+    const localDate = [
+      today.getFullYear(),
+      String(today.getMonth() + 1).padStart(2, "0"),
+      String(today.getDate()).padStart(2, "0")
+    ].join("-");
+
+    $("#exam-date").min = localDate;
+
+    function showStatus(text) {
+      $("#status").textContent = text;
+    }
+
+    function getPlanInput() {
+      const examDate = $("#exam-date").value;
+      const examTime = $("#exam-time").value;
+
+      if (!examDate || !examTime) {
+        throw new Error("Enter your exam date and time.");
+      }
+
+      if (examDate < localDate) {
+        throw new Error("Choose today or a future date for your exam.");
+      }
+
+      if (
+        examDate === localDate &&
+        new Date(examDate + "T" + examTime) <= new Date()
+      ) {
+        throw new Error("Choose a future time for today's exam.");
+      }
+
+      return {
+        examName: $("#exam-name").value.trim() || "My exam",
+        examDate,
+        examTime,
+        hours: Number($("#hours").value),
+        startTime: $("#start-time").value,
+        topics: Array.from($("#notes").files, file => file.name)
+      };
+    }
+
+    function savePlan() {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify({ plan, completed }));
+    }
+
+    function renderSchedule(sessions) {
+      const container = $("#schedule");
+      container.replaceChildren();
+
+      sessions.forEach((session, index) => {
+        const row = document.createElement("label");
+        row.className = "session";
+
+        const time = document.createElement("span");
+        time.className = "session-time";
+        time.textContent = session.time;
+
+        const copy = document.createElement("span");
+        const title = document.createElement("strong");
+        title.className = "session-title";
+        title.textContent = session.title;
+
+        const detail = document.createElement("small");
+        detail.className = "session-detail";
+        detail.textContent = session.detail;
+
+        copy.append(title, detail);
+
+        const checkbox = document.createElement("input");
+        checkbox.type = "checkbox";
+        checkbox.checked = completed.includes(index);
+        checkbox.setAttribute("aria-label", "Mark session complete");
+
+        checkbox.addEventListener("change", () => {
+          completed = checkbox.checked
+            ? [...completed, index]
+            : completed.filter(value => value !== index);
+          $("#completed-count").textContent = completed.length;
+          savePlan();
+        });
+
+        row.append(time, copy, checkbox);
+        container.append(row);
+      });
+
+      $("#completed-count").textContent = completed.length;
+    }
+
+    function createBasicRoutine(input) {
+      const topics = input.topics.length
+        ? input.topics.map(name => name.replace(/\.[^.]+$/, ""))
+        : ["Review core concepts", "Practice questions", "Active recall"];
+
+      const [startHour, startMinute] = input.startTime.split(":").map(Number);
+
+      return Array.from({ length: input.hours }, (_, index) => {
+        const start = new Date();
+        start.setHours(startHour, startMinute + index * 60, 0, 0);
+
+        return {
+          time: start.toLocaleTimeString([], {
+            hour: "numeric",
+            minute: "2-digit"
+          }),
+          title: (index === 0 ? "Study: " : "Practice: ") + topics[index % topics.length],
+          detail: "Study for 50 minutes, then take a 10-minute break."
+        };
+      });
+    }
+
+    function displayPlan(input, sessions) {
+      plan = input;
+      completed = [];
+      savePlan();
+
+      const date = new Date(input.examDate + "T12:00:00");
+      $("#exam-summary").textContent =
+        input.examName + " — " + date.toLocaleDateString() + " at " + input.examTime;
+
+      $("#schedule-summary").textContent =
+        "Your study sessions for " + input.examName + ".";
+
+      renderSchedule(sessions);
+    }
+
+    $("#plan-form").addEventListener("submit", event => {
+      event.preventDefault();
+
+      try {
+        const input = getPlanInput();
+        displayPlan(input, createBasicRoutine(input));
+        showStatus("Your study routine is ready.");
+      } catch (error) {
+        showStatus(error.message);
+      }
+    });
+
+    $("#ai-plan").addEventListener("click", async () => {
+      let input;
+
+      try {
+        input = getPlanInput();
+      } catch (error) {
+        showStatus(error.message);
+        return;
+      }
+
+      const button = $("#ai-plan");
+      button.disabled = true;
+      showStatus("Creating your AI study routine…");
+
+      try {
+        const response = await fetch("/api/study-plan", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(input)
+        });
+
+        const result = await response.json();
+
+        if (!response.ok) {
+          throw new Error(result.error || "Couldn't create an AI routine.");
+        }
+
+        const [startHour, startMinute] = input.startTime.split(":").map(Number);
+        const sessions = result.sessions.map((session, index) => {
+          const start = new Date();
+          start.setHours(startHour, startMinute + index * 60, 0, 0);
+
+          return {
+            time: start.toLocaleTimeString([], {
+              hour: "numeric",
+              minute: "2-digit"
+            }),
+            title: session.title,
+            detail: session.detail
+          };
+        });
+
+        displayPlan(input, sessions);
+        showStatus("Your AI-generated routine is ready.");
+      } catch (error) {
+        showStatus(error.message);
+      } finally {
+        button.disabled = false;
+      }
+    });
+
+    function addMessage(text, role) {
+      const element = document.createElement("div");
+      element.className = "message " + role;
+      element.textContent = text;
+      $("#messages").append(element);
+      $("#messages").scrollTop = $("#messages").scrollHeight;
+      return element;
+    }
+
+    $("#chat-form").addEventListener("submit", async event => {
+      event.preventDefault();
+
+      const input = $("#chat-input");
+      const message = input.value.trim();
+      if (!message) return;
+
+      addMessage(message, "user");
+      chatHistory.push({ role: "user", content: message });
+      input.value = "";
+
+      const pending = addMessage("Thinking…", "assistant");
+      const button = $("#send-button");
+      button.disabled = true;
+
+      try {
+        const response = await fetch("/api/coach", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            message,
+            history: chatHistory.slice(-8),
+            context: plan ? {
+              examName: plan.examName,
+              examDate: plan.examDate,
+              hoursPerDay: plan.hours,
+              topics: plan.topics
+            } : null
+          })
+        });
+
+        const result = await response.json();
+
+        if (!response.ok) {
+          throw new Error(result.error || "The AI coach couldn't reply.");
+        }
+
+        pending.textContent = result.reply;
+        chatHistory.push({ role: "assistant", content: result.reply });
+      } catch (error) {
+        pending.textContent = error.message;
+      } finally {
+        button.disabled = false;
+        input.focus();
+      }
+    });
+
+    try {
+      const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || "{}");
+
+      if (saved.plan) {
+        plan = saved.plan;
+        completed = Array.isArray(saved.completed) ? saved.completed : [];
+
+        $("#exam-name").value = plan.examName;
+        $("#exam-date").value = plan.examDate;
+        $("#exam-time").value = plan.examTime;
+        $("#hours").value = plan.hours;
+        $("#start-time").value = plan.startTime;
+
+        $("#exam-summary").textContent =
+          plan.examName + " — " + plan.examDate + " at " + plan.examTime;
+
+        const sessions = createBasicRoutine(plan);
+        $("#schedule-summary").textContent =
+          "Your study sessions for " + plan.examName + ".";
+        renderSchedule(sessions);
+      }
+    } catch (error) {
+      console.error("Could not load the saved plan.", error);
+    }
+  </script>
+</body>
+</html>
